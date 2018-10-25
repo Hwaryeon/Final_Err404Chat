@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset = 'utf-8'>
+    <title>chatRoom</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link href='//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSans-kr.css' rel='stylesheet' type='text/css'> 
+    <style>
+      @import url(//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSans-kr.css);
+      * { font-family: 'Spoqa Han Sans', 'Spoqa Han Sans JP', 'Sans-serif'; }
+      </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"> 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+  </head>
+  <body>
+    <div id = 'chatTop'>
+      <table>
+        <tr>
+          <td align = "center" width = "70px;" height = "63px;">
+            <a href = '/chat/<%=userInfo[0]%>'>
+              <img src="/images/list.png">
+            </a>
+          </td>
+          <td width = "250px;"></td>
+          <td align = "center" width = "70px;"><a onclick = "exitRoom(`<%=userInfo[0]%>`, `<%=userInfo[1]%>`);"><img src="/images/logout.png"></a></td>
+        </tr>
+      </table>
+    </div>
+
+    <div id = 'chatContent'>
+      <% if(chatLog != null){ %>
+        
+      <% for(var i = 0; i < chatLog.length; i++){ %>
+        <% var txt = chatLog[i].cContent %>
+        <% var log = txt.replace("<br/>","\n"); %>
+        <% var d = new Date()%>
+
+        <% if(userInfo[0] == chatLog[i].cUser.mid && chatLog[i].cUser.mid != 899889988){ %>
+            <!-- <img src = '<%= chatLog[i].cUser.profile %>' /> -->
+            <div id = "otherLog" style = "text-align: right;">
+              <span style = "font-size : 8pt;"><%= chatLog[i].cDate.getHours() %>시 <%= chatLog[i].cDate.getMinutes() %>분</span>
+              <span class='chat_content'><%= log %></span>
+          </div>
+        <%}else if(chatLog[i] == null || chatLog[i].cUser.mid == 899889988){ %>
+          <div style = "text-align : center;"><span id = 'systemMessage'><%= chatLog[i].cContent %></span></div>
+        <%}else if( 
+                    (userInfo[0] != chatLog[i].cUser.mid )){ %>
+            <div style = "text-align: left;">
+              <span id = 'logCount<%=i%>' class='chat_content  other-side' 
+                onclick = "translatelog('<%= log %>', '<%=chatLog[i].cUser.language %>', this)">
+                <%= chatLog[i].cUser.name %> : <span id = 'logContent'><%= log %></span></span>
+              <span style = "font-size : 8pt;"><%= chatLog[i].cDate.getHours() %>시 <%= chatLog[i].cDate.getMinutes() %>분</span>
+            </div >
+
+        <%}else{ } %>
+      <% }%>
+
+      <%}else{ %>
+
+      <%} %>
+    </div>
+    <!-- <div id = 'content'>
+      <textarea id = 'txtContent' rows = '6'cols = '46'></textarea>
+      <button>입력</button>
+    </div> -->
+    <table>
+      <tr id = 'content' style ='margin : 0px;'>
+        <td><textarea id = 'txtContent' rows = '4' cols = '44'></textarea></td>
+        <td width = '100'; align = "center"><button class = "btn" id = "btn_send" style="width : 60px;">입력</button></td>
+      </tr>
+    </table>
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <script>
+      $(function () {
+        $("#chatContent").scrollTop($("#chatContent")[0].scrollHeight+20);
+        
+        //웹소켓 객체생성
+        var socket=io.connect("http://192.168.20.246:3000/chat");
+        
+        //서버접속시
+        socket.on('connect', function () {
+          //읽음여부 상태 변화
+          var xhr = new XMLHttpRequest();
+            xhr.open('PATCH', `/readYN`);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({mid : `<%= userInfo[0] %>`, rid : `<%= userInfo[1] %>`}));
+        });
+        
+        //메세지를 보내면 밑에 적히도록
+        socket.on('chat', function(data) {
+          var d = new Date();
+            if(data.mid == `<%= userInfo[0] %>` && data.mid != 899889988){
+              $('#chatContent')
+                  .append(`<div style = "text-align: right;">
+                            <span style = "font-size : 8pt;">${d.getHours()}시 ${d.getMinutes()}분</span>
+                            <span class='chat_content'>${data.txt}</span>
+                          </div>`);
+              }else if(data.mid == 899889988){
+                $('#chatContent')
+                  .append(`<div style = "text-align : center;"><span>${data.txt}</span><div>`);
+        
+                }else if(data.mid != `<%= userInfo[0] %>`){
+                          $('#chatContent')
+                                  .append(`<div style = "text-align: left;">
+                                            <span class='chat_content other-side' 
+                                            onclick = "translatelog('${data.txt}', '${data.userLanguage}', this)">${data.user} : 
+                                            <span id = 'logContent'> ${data.txt}</span></span>
+                                            <span style = "font-size : 8pt;">${d.getHours()}시 ${d.getMinutes()}분</span>
+                                          </div>`);
+
+                          //읽음여부 상태 변화
+                          var xhr = new XMLHttpRequest();
+                          xhr.open('PATCH', `/readYN`);
+                          xhr.setRequestHeader('Content-Type', 'application/json');
+                          xhr.send(JSON.stringify({mid : `<%= userInfo[0] %>`, rid : `<%= userInfo[1] %>`}));
+            }else{ }
+            $("#chatContent").scrollTop($("#chatContent")[0].scrollHeight+20);
+        });
+        
+        //버튼누를때 보내기
+        $('#btn_send').click(function () {
+            var str=$("#txtContent").val();
+            var txt = str.replace(/(?:\r\n|\r|\n)/g, '<br/>');
+            $("#txtContent").val("");
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', `/chat/<%= userInfo[0] %>/room/<%= userInfo[1] %>/send`);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({chat : txt}));
+        });
+
+        $("#txtContent").keydown( (key) => {
+          if(key.keyCode == 13 && key.altKey){
+            $("#txtContent").val($("#txtContent").val() + '\n');
+            console.log('이쪽으로 오나?');
+          }else if(key.keyCode == 13){
+            if($("#txtContent").val() != ""){
+              $('#btn_send').click();
+              return false;
+            }
+            
+          }
+        });
+    });
+
+    function translatelog(data, userLanguage, target){
+      
+      console.log(data);
+      $.ajax({
+        data : {log : data, source : userLanguage},
+        type : 'get',
+        url : '/translateLog',
+        success : function(data){
+          $(target).children().text(data);
+        },
+        error : function(){
+          console.log('실패');
+        }
+      })
+    }
+
+    function exitRoom(user, room){
+
+      location.href = `/exitRoom/${user}/${room}`;
+    }
+    </script>
+    
+  </body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset = 'utf-8'>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <title>채팅창</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link href='//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSans-kr.css' rel='stylesheet' type='text/css'> 
+    <style>
+      @import url(//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSans-kr.css);
+      * { font-family: 'Spoqa Han Sans', 'Spoqa Han Sans JP', 'Sans-serif'; }
+      </style>
+  </head>
+  <body>
+    <div id = 'chatTop'>
+      
+     </div>
+
+    
+     <% for(var i = 0; i< roomsList.length; i++){%>
+        <div class = 'listResult' id = '"listResult" + "<%= i %>"' style = "height : 80px; " onclick = 'movingRoom("<%= roomsList[i].id %>")'>
+          <%=roomsList[i].rTitle%><br>
+          <%if(chat[i][0] != null && chat[i][0].cUser.name != 'SystemAdmin'){ %>
+            <span class = '<%= roomsList[i].id %>' style = "margin-left : 20px; font-size : 9pt;"><%= chat[i][0].cUser.name%> : <%= chat[i][0].cContent %></span>
+            <% if(cnt[i] != 0){ %>
+            <span class = "listChat" id = 'cv<%= roomsList[i].id %>' style = "margin-right : 40px; margin-top : 3px; float : right;"><%= cnt[i]%></span>
+            <% } %>
+          <%}else{ %>
+            <p style = "text-indent: 20px; font-size : 9pt;"> 최근 기록이 없습니다 </p>
+          <%} %>
+          
+        </div> 
+        
+      <%}%>
+        <div style = "text-align: center; font-size : 10px; color : lightgray">더 이상 채팅방이 없습니다.</div>
+
+
+    <script src = '/socket.io/socket.io.js'></script>
+    <script>
+
+        function movingRoom(data){
+            //location.href = `http://192.168.20.246:3000/chat/<%= mid %>/room/${data}`
+            location.href = `http://192.168.20.246:3000/chat/<%= mid %>/room/${data}`
+            
+        };
+      //var socket = io.connect('http://192.168.20.246:3000/room', { path : '/socket.io', });
+      var socket = io.connect('http://192.168.20.246:3000/room', { path : '/socket.io', });
+      socket.on('news', function(data){
+        console.log(data);
+        console.log(data.txt + ' / ' + data.user + ' / ' + data.rid);
+        $("." + data.rid).text(data.user + ' : ' + data.txt);
+        var str = Number($("#cv" + data.rid).text());
+        $("#cv" + data.rid).text(eval(str + 1));
+        
+      })
+
+    </script>
+  </body>
+</html>

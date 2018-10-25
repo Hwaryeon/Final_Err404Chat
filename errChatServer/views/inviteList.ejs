@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset = 'utf-8'>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <title>채팅창</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link href='//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSans-kr.css' rel='stylesheet' type='text/css'> 
+    <style>
+      @import url(//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSans-kr.css);
+      * { font-family: 'Spoqa Han Sans', 'Spoqa Han Sans JP', 'Sans-serif'; }
+      </style>
+  </head>
+  <body>
+    <div id = 'chatTop'>
+      
+     </div>
+    
+     <% for(var i = 0; i< room.length; i++){%>
+        <div class = 'listResult' id = '"listResult" + "<%= i %>"' style = "height : 60px; " onclick = "inviteRoom('<%= room[i].id %>', '<%= room[i].rid %>')">
+          <div style="padding-top : 15px;">
+              <span style="margin-left: 20px;">
+            <%=room[i].rTitle%>
+        </span>
+          <span width = "400px" style = " float : right; padding-right: 20px;">
+            <span style = "border : 1px solid #F4D8DF; background: #F4D8DF; color :white;">초대하기</span></span>
+        </div>
+        </div> 
+      <%}%>
+        <div style = "text-align: center; font-size : 10px; color : lightgray">더 이상 채팅방이 없습니다.</div>
+
+    <script>
+        function inviteRoom(roomData, rId){
+            console.log(roomData);
+             $.ajax({
+                url : '/inviteRoom',
+                data : {
+                    userMid : `<%= userid %>`,
+                    roomid : roomData,
+                    rId : rId
+                },
+                type : 'post',
+                success:function(data){
+                    location.href = `http://192.168.20.246:3000/chat/<%= mid %>/room/${data}`
+                },
+                error:function(){
+                    consoel.log('실패');
+                }
+            })
+
+            
+        };
+    </script>
+  </body>
+</html>
